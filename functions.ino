@@ -1,12 +1,12 @@
 void checkBrightness() {
-  if (analogRead(PHOTO) < BRIGHT_THRESHOLD) {   // если темно
+  if (analogRead(PHOTO) < BRIGHT_THRESHOLD) {   // if it's dark
     analogWrite(BACKLIGHT, LCD_BRIGHT_MIN);
 #if (LED_MODE == 0)
     LED_ON = (LED_BRIGHT_MIN);
 #else
     LED_ON = (255 - LED_BRIGHT_MIN);
 #endif
-  } else {                                      // если светло
+  } else {                                      // if it's light
     analogWrite(BACKLIGHT, LCD_BRIGHT_MAX);
 #if (LED_MODE == 0)
     LED_ON = (LED_BRIGHT_MAX);
@@ -90,7 +90,7 @@ void readSensors() {
 
 void drawSensors() {
 #if (DISPLAY_TYPE == 1)
-  // дисплей 2004
+  // display 2004
   lcd.setCursor(0, 2);
   lcd.print(String(dispTemp, 1));
   lcd.write(223);
@@ -109,7 +109,7 @@ void drawSensors() {
   lcd.print(String(dispRain) + "%");
 
 #else
-  // дисплей 1602
+  // display 1602
   lcd.setCursor(0, 0);
   lcd.print(String(dispTemp, 1));
   lcd.write(223);
@@ -128,7 +128,7 @@ void drawSensors() {
 }
 
 void plotSensorsTick() {
-  // 4 минутный таймер
+  // 4 minute timer
   if (hourPlotTimer.isReady()) {
     for (byte i = 0; i < 14; i++) {
       tempHour[i] = tempHour[i + 1];
@@ -144,7 +144,7 @@ void plotSensorsTick() {
     else pressHour[14] = dispPres;
   }
 
-  // 1.5 часовой таймер
+  // 1.5 hour timer
   if (dayPlotTimer.isReady()) {
     long averTemp = 0, averHum = 0, averPress = 0, averCO2 = 0;
 
@@ -173,7 +173,7 @@ void plotSensorsTick() {
 
   // 10 минутный таймер
   if (predictTimer.isReady()) {
-    // тут делаем линейную аппроксимацию для предсказания погоды
+    // here we do linear approximation for weather prediction
     long averPress = 0;
     for (byte i = 0; i < 10; i++) {
       bme.takeForcedMeasurement();
@@ -182,41 +182,41 @@ void plotSensorsTick() {
     }
     averPress /= 10;
 
-    for (byte i = 0; i < 5; i++) {                   // счётчик от 0 до 5 (да, до 5. Так как 4 меньше 5)
-      pressure_array[i] = pressure_array[i + 1];     // сдвинуть массив давлений КРОМЕ ПОСЛЕДНЕЙ ЯЧЕЙКИ на шаг назад
+    for (byte i = 0; i < 5; i++) {                   // counter from 0 to 5 (yes, up to 5. Since 4 is less than 5)
+      pressure_array[i] = pressure_array[i + 1];     // move the pressure array EXCEPT THE LAST CELL one step back
     }
-    pressure_array[5] = averPress;                    // последний элемент массива теперь - новое давление
+    pressure_array[5] = averPress;                    // the last element of the array is now the new pressure
     sumX = 0;
     sumY = 0;
     sumX2 = 0;
     sumXY = 0;
-    for (int i = 0; i < 6; i++) {                    // для всех элементов массива
+    for (int i = 0; i < 6; i++) {                    // for all array elements
       sumX += time_array[i];
       sumY += (long)pressure_array[i];
       sumX2 += time_array[i] * time_array[i];
       sumXY += (long)time_array[i] * pressure_array[i];
     }
     a = 0;
-    a = (long)6 * sumXY;             // расчёт коэффициента наклона приямой
+    a = (long)6 * sumXY;             // calculation of the slope coefficient of the pit
     a = a - (long)sumX * sumY;
     a = (float)a / (6 * sumX2 - sumX * sumX);
-    delta = a * 6;      // расчёт изменения давления
-    dispRain = map(delta, -250, 250, 100, -100);  // пересчитать в проценты
-    //Serial.println(String(pressure_array[5]) + " " + String(delta) + " " + String(dispRain));   // дебаг
+    delta = a * 6;      // pressure change calculation
+    dispRain = map(delta, -250, 250, 100, -100);  // convert to percentage
+    //Serial.println(String(pressure_array[5]) + " " + String(delta) + " " + String(dispRain));   // debug
   }
 }
 
 boolean dotFlag;
 void clockTick() {
   dotFlag = !dotFlag;
-  if (dotFlag) {          // каждую секунду пересчёт времени
+  if (dotFlag) {          // time recalculation every second
     secs++;
-    if (secs > 59) {      // каждую минуту
+    if (secs > 59) {      // every minute
       secs = 0;
       mins++;
       if (mins <= 59 && mode == 0) drawClock(hrs, mins, 0, 0, 1);
     }
-    if (mins > 59) {      // каждый час
+    if (mins > 59) {      // every hour
       now = rtc.now();
       secs = now.second();
       mins = now.minute();
