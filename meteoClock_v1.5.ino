@@ -11,15 +11,15 @@
 #define LCD_BRIGHT_MIN 10     // min display backlight brightness (0 - 255)
 
 #define BLUE_YELLOW 1       // yellow color instead of blue (1 yes, 0 no), but due to the connection features, yellow is not so bright
-#define DISP_MODE 1         // в правом верхнем углу отображать: 0 - год, 1 - день недели, 2 - секунды
-#define WEEK_LANG 1         // язык дня недели: 0 - английский, 1 - русский (транслит)
-#define DEBUG 0             // вывод на дисплей лог инициализации датчиков при запуске. Для дисплея 1602 не работает! Но дублируется через порт!
-#define PRESSURE 1          // 0 - график давления, 1 - график прогноза дождя (вместо давления). Не забудь поправить пределы гроафика
-#define CO2_SENSOR 1        // включить или выключить поддержку/вывод с датчика СО2 (1 вкл, 0 выкл)
-#define DISPLAY_TYPE 1      // тип дисплея: 1 - 2004 (большой), 0 - 1602 (маленький)
-#define DISPLAY_ADDR 0x27   // адрес платы дисплея: 0x27 или 0x3f. Если дисплей не работает - смени адрес! На самом дисплее адрес не указан
+#define DISP_MODE 1         // in the upper right corner display: 0 - year, 1 - day of the week, 2 - seconds
+#define WEEK_LANG 1         // language of the day of the week: 0 - English, 1 - Russian (translit)
+#define DEBUG 0             // displaying a log of the initialization of sensors at startup. Doesn't work for display 1602! But it is duplicated through the port!
+#define PRESSURE 1          // 0 - pressure graph, 1 - rain forecast graph (instead of pressure). Don't forget to adjust the graphics limits
+#define CO2_SENSOR 1        // enable or disable CO2 sensor support/output (1 on, 0 off)
+#define DISPLAY_TYPE 1      // display type: 1 - 2004 (large), 0 - 1602 (small)
+#define DISPLAY_ADDR 0x27   // Display board address: 0x27 or 0x3f. If the display does not work, change the address! The address is not indicated on the display itself
 
-// пределы отображения для графиков
+// display limits for graphs
 #define TEMP_MIN 15
 #define TEMP_MAX 35
 #define HUM_MIN 0
@@ -29,13 +29,13 @@
 #define CO2_MIN 300
 #define CO2_MAX 2000
 
-// адрес BME280 жёстко задан в файле библиотеки Adafruit_BME280.h
-// стоковый адрес был 0x77, у китайского модуля адрес 0x76.
-// Так что если юзаете НЕ библиотеку из архива - не забудьте поменять
+// the BME280 address is hardcoded in the Adafruit_BME280.h library file
+// The stock address was 0x77, the Chinese module had an address of 0x76.
+// So if you are NOT using a library from the archive, don’t forget to change
 
-// если дисплей не заводится - поменяйте адрес (строка 54)
+// if the display does not start, change the address (line 54)
 
-// пины
+// pins
 #define BACKLIGHT 10
 #define PHOTO A3
 
@@ -48,8 +48,8 @@
 #define LED_B 5
 #define BTN_PIN 4
 
-#define BL_PIN 10     // пин подсветки дисплея
-#define PHOTO_PIN 0   // пин фоторезистора
+#define BL_PIN 10     // display backlight pin
+#define PHOTO_PIN 0   // photoresistor pin
 
 // библиотеки
 #include <Wire.h>
@@ -91,25 +91,25 @@ GButton button(BTN_PIN, LOW_PULL, NORM_OPEN);
 int8_t hrs, mins, secs;
 byte mode = 0;
 /*
-  0 часы и данные
-  1 график температуры за час
-  2 график температуры за сутки
-  3 график влажности за час
-  4 график влажности за сутки
-  5 график давления за час
-  6 график давления за сутки
-  7 график углекислого за час
-  8 график углекислого за сутки
+  0 clock and data
+  1 hourly temperature chart
+  2 daily temperature chart
+  3 hourly humidity graph
+  4 daily humidity chart
+  5 pressure chart per hour
+  6 daily blood pressure chart
+  7 carbon dioxide graph per hour
+  8 carbon dioxide chart per day
 */
 
-// переменные для вывода
+// variables to output
 float dispTemp;
 byte dispHum;
 int dispPres;
 int dispCO2;
 int dispRain;
 
-// массивы графиков
+// graph arrays
 int tempHour[15], tempDay[15];
 int humHour[15], humDay[15];
 int pressHour[15], pressDay[15];
@@ -120,8 +120,8 @@ uint32_t sumX, sumY, sumX2, sumXY;
 float a, b;
 byte time_array[6];
 
-// символы
-// график
+// symbols
+// schedule
 byte row8[8] = {0b11111,  0b11111,  0b11111,  0b11111,  0b11111,  0b11111,  0b11111,  0b11111};
 byte row7[8] = {0b00000,  0b11111,  0b11111,  0b11111,  0b11111,  0b11111,  0b11111,  0b11111};
 byte row6[8] = {0b00000,  0b00000,  0b11111,  0b11111,  0b11111,  0b11111,  0b11111,  0b11111};
@@ -131,7 +131,7 @@ byte row3[8] = {0b00000,  0b00000,  0b00000,  0b00000,  0b00000,  0b11111,  0b11
 byte row2[8] = {0b00000,  0b00000,  0b00000,  0b00000,  0b00000,  0b00000,  0b11111,  0b11111};
 byte row1[8] = {0b00000,  0b00000,  0b00000,  0b00000,  0b00000,  0b00000,  0b00000,  0b11111};
 
-// цифры
+// numbers
 uint8_t LT[8] = {0b00111,  0b01111,  0b11111,  0b11111,  0b11111,  0b11111,  0b11111,  0b11111};
 uint8_t UB[8] = {0b11111,  0b11111,  0b11111,  0b00000,  0b00000,  0b00000,  0b00000,  0b00000};
 uint8_t RT[8] = {0b11100,  0b11110,  0b11111,  0b11111,  0b11111,  0b11111,  0b11111,  0b11111};
@@ -259,7 +259,6 @@ void drawdots(byte x, byte y, boolean state) {
 }
 
 void drawClock(byte hours, byte minutes, byte x, byte y, boolean dotState) {
-  // чисти чисти!
   lcd.setCursor(x, y);
   lcd.print("               ");
   lcd.setCursor(x, y + 1);
@@ -269,7 +268,7 @@ void drawClock(byte hours, byte minutes, byte x, byte y, boolean dotState) {
   if (hours / 10 == 0) drawDig(10, x, y);
   else drawDig(hours / 10, x, y);
   drawDig(hours % 10, x + 4, y);
-  // тут должны быть точки. Отдельной функцией
+  // there should be dots here. Separate function
   drawDig(minutes / 10, x + 8, y);
   drawDig(minutes % 10, x + 12, y);
 }
@@ -327,27 +326,27 @@ void drawPlot(byte pos, byte row, byte width, byte height, int min_val, int max_
   lcd.setCursor(16, 2); lcd.print(plot_array[14]);
   lcd.setCursor(16, 3); lcd.print(min_value);
 
-  for (byte i = 0; i < width; i++) {                  // каждый столбец параметров
+  for (byte i = 0; i < width; i++) {                  // each parameter column
     int fill_val = plot_array[i];
     fill_val = constrain(fill_val, min_val, max_val);
     byte infill, fract;
-    // найти количество целых блоков с учётом минимума и максимума для отображения на графике
+    // find the number of whole blocks taking into account the minimum and maximum to be displayed on the graph
     if (plot_array[i] > min_val)
       infill = floor((float)(plot_array[i] - min_val) / (max_val - min_val) * height * 10);
     else infill = 0;
-    fract = (float)(infill % 10) * 8 / 10;                   // найти количество оставшихся полосок
+    fract = (float)(infill % 10) * 8 / 10;                   // find the number of remaining stripes
     infill = infill / 10;
 
-    for (byte n = 0; n < height; n++) {     // для всех строк графика
-      if (n < infill && infill > 0) {       // пока мы ниже уровня
-        lcd.setCursor(i, (row - n));        // заполняем полными ячейками
+    for (byte n = 0; n < height; n++) {     // for all lines of the graph
+      if (n < infill && infill > 0) {       // while we are below the level
+        lcd.setCursor(i, (row - n));        // fill with full cells
         lcd.write(0);
       }
-      if (n >= infill) {                    // если достигли уровня
+      if (n >= infill) {                    // if you reach the level
         lcd.setCursor(i, (row - n));
-        if (fract > 0) lcd.write(fract);          // заполняем дробные ячейки
-        else lcd.write(16);                       // если дробные == 0, заливаем пустой
-        for (byte k = n + 1; k < height; k++) {   // всё что сверху заливаем пустыми
+        if (fract > 0) lcd.write(fract);          // fill in fractional cells
+        else lcd.write(16);                       // if fractional == 0, fill empty
+        for (byte k = n + 1; k < height; k++) {   // fill everything on top with empty
           lcd.setCursor(i, (row - k));
           lcd.write(16);
         }
@@ -388,7 +387,7 @@ byte LED_OFF = (255 - LED_BRIGHT_MIN);
 #endif
 
 void setLED(byte color) {
-  // сначала всё выключаем
+  // first turn everything off
   if (!LED_MODE) {
     analogWrite(LED_R, 0);
     analogWrite(LED_G, 0);
@@ -398,7 +397,7 @@ void setLED(byte color) {
     analogWrite(LED_G, 255);
     analogWrite(LED_B, 255);
   }
-  switch (color) {    // 0 выкл, 1 красный, 2 зелёный, 3 синий (или жёлтый)
+  switch (color) {    // 0 off, 1 red, 2 green, 3 blue (or yellow)
     case 0:
       break;
     case 1: analogWrite(LED_R, LED_ON);
@@ -408,7 +407,8 @@ void setLED(byte color) {
     case 3:
       if (!BLUE_YELLOW) analogWrite(LED_B, LED_ON);
       else {
-        analogWrite(LED_R, LED_ON - 50);    // чутка уменьшаем красный
+        analogWrite(LED_R, LED_ON - 50);    // reduce the red a bit
+
         analogWrite(LED_G, LED_ON);
       }
       break;
@@ -443,7 +443,7 @@ void setup() {
   Serial.print(F("MHZ-19... "));
   mhz19.begin(MHZ_TX, MHZ_RX);
   mhz19.setAutoCalibration(false);
-  mhz19.getStatus();    // первый запрос, в любом случае возвращает -1
+  mhz19.getStatus();    // the first request returns -1 in any case
   delay(500);
   if (mhz19.getStatus() == 0) {
     lcd.print(F("OK"));
@@ -526,9 +526,9 @@ void setup() {
 
   bme.takeForcedMeasurement();
   uint32_t Pressure = bme.readPressure();
-  for (byte i = 0; i < 6; i++) {   // счётчик от 0 до 5
-    pressure_array[i] = Pressure;  // забить весь массив текущим давлением
-    time_array[i] = i;             // забить массив времени числами 0 - 5
+  for (byte i = 0; i < 6; i++) {   // counter from 0 to 5
+    pressure_array[i] = Pressure;  // hammer the entire array with current pressure
+    time_array[i] = i;             // fill the time array with numbers 0 - 5
   }
 
   if (DISPLAY_TYPE == 1) {
@@ -541,17 +541,17 @@ void setup() {
 }
 
 void loop() {
-  if (brightTimer.isReady()) checkBrightness(); // яркость
-  if (sensorsTimer.isReady()) readSensors();    // читаем показания датчиков с периодом SENS_TIME
+  if (brightTimer.isReady()) checkBrightness(); // brightness
+  if (sensorsTimer.isReady()) readSensors();    // read sensor readings with SENS_TIME period
 
 #if (DISPLAY_TYPE == 1)
-  if (clockTimer.isReady()) clockTick();        // два раза в секунду пересчитываем время и мигаем точками
-  plotSensorsTick();                            // тут внутри несколько таймеров для пересчёта графиков (за час, за день и прогноз)
-  modesTick();                                  // тут ловим нажатия на кнопку и переключаем режимы
-  if (mode == 0) {                                  // в режиме "главного экрана"
-    if (drawSensorsTimer.isReady()) drawSensors();  // обновляем показания датчиков на дисплее с периодом SENS_TIME
-  } else {                                          // в любом из графиков
-    if (plotTimer.isReady()) redrawPlot();          // перерисовываем график
+  if (clockTimer.isReady()) clockTick();        // We recalculate the time twice a second and flash the dots
+  plotSensorsTick();                            // there are several timers inside for recalculating charts (per hour, per day and forecast)
+  modesTick();                                  // here we catch button presses and switch modes
+  if (mode == 0) {                                  // in "home screen" mode
+    if (drawSensorsTimer.isReady()) drawSensors();  // we update the sensor readings on the display with the SENS_TIME period
+  } else {                                          // in any of the charts
+    if (plotTimer.isReady()) redrawPlot();          // redraw the graph
   }
 #else
   if (drawSensorsTimer.isReady()) drawSensors();
